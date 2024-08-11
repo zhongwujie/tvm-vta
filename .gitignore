@@ -198,6 +198,7 @@ tvm_t.*
 
 # Visual Studio Code
 .vscode
+.metals
 
 # tmp file
 .nfs*

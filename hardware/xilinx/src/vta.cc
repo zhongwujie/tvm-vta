@@ -129,6 +129,10 @@ void write_tensor(
   }
 }
 
+/*
+ * @parameters
+ * - insn_count: Number of instructions to fetch
+*/
 void fetch(
   uint32_t insn_count,
   volatile insn_T *insns,
