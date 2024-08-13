@@ -43,6 +43,7 @@ void reset_mem(
   }
 }
 
+// DATA_T is bus_T
 template <typename DATA_T, int MAT_AXI_RATIO, int ELEM_BYTES>
 void load_pad_2d(
   volatile DATA_T *src,
@@ -59,12 +60,12 @@ void load_pad_2d(
 #pragma HLS INLINE
 
   reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, y_offset_0, dst);
-  for (int y = 0; y < y_size; y++) {
+  for (int y = 0; y < y_size; y++) { // It only loads a kernel.
 #pragma HLS PIPELINE
     reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, x_pad_0, dst);
     memcpy(&dst[sram_idx][0],
            (const DATA_T*) &src[dram_idx * MAT_AXI_RATIO],
-           x_size * ELEM_BYTES);
+           x_size * ELEM_BYTES); // each time it will fill multiple rows
     sram_idx += x_size;
     dram_idx += x_stride;
     reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, x_pad_1, dst);
@@ -131,7 +132,7 @@ void write_tensor(
 
 /*
  * @parameters
- * - insn_count: Number of instructions to fetch
+ * - insn_count: Number of instructions to fetch, which is synthesized into a register
 */
 void fetch(
   uint32_t insn_count,
@@ -176,7 +177,7 @@ void load(
   hls::stream<insn_T> &load_queue,
   hls::stream<bool> &g2l_dep_queue,
   hls::stream<bool> &l2g_dep_queue,
-  bus_T inp_mem[VTA_INP_BUFF_DEPTH][INP_MAT_AXI_RATIO],
+  bus_T inp_mem[VTA_INP_BUFF_DEPTH][INP_MAT_AXI_RATIO], // But the size of the inp_mem doesn't equal to VTA_INP_BUFF_SIZE 
   bus_T wgt_mem[VTA_WGT_BUFF_DEPTH][WGT_MAT_AXI_RATIO]) {
 #pragma HLS INTERFACE m_axi port = inputs offset = slave bundle = data_port
 #pragma HLS INTERFACE m_axi port = weights offset = slave bundle = data_port
@@ -197,7 +198,7 @@ void load(
 
   // Pop dependence token if instructed
   if (insn.pop_next_dep) {
-    g2l_dep_queue.read();
+    g2l_dep_queue.read(); // for synchronization
   }
 
   // Pre-processing
